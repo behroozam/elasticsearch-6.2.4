@@ -1,8 +1,8 @@
-version: '2'
-catalog:
+.catalog:
     name: Elasticsearch Cluster
-    version: 5.6.4
+    version: 5.4.2-rancher1
     description: Scalable Elasticsearch Cluster
+    maximum_rancher_version: v1.6.14
 
     questions:
         - variable: "cluster_name"
@@ -11,15 +11,7 @@ catalog:
           label: "Cluster name"
           description: "Name of the Elasticsearch Cluster"
           default: "es-cluster"
-
-        - variable: "USE_XPACK_SECURITY"
-          label: "Use x-pack security:"
-          description: |
-            Use x-pack security - this currently does nothing.
-          default: true
-          required: true
-          type: boolean
-
+        
         - variable: "UPDATE_SYSCTL"
           label: "Update host sysctl:"
           description: |
@@ -27,51 +19,46 @@ catalog:
             WARN: If set true, host param vm.max_map_count will be update to 262144.
           default: false
           required: true
-          type: boolean
-
-        - variable: "INCLUDE_KIBANA"
-          label: "Include kibana:"
-          description: |
-            Set true to deploy a linked Kibana instance as well.
-          default: true
-          required: true
-          type: boolean
+          type: enum
+          options:
+            - false
+            - true
 
         - variable: "master_heap_size"
           type: "string"
           required: true
           label: "Heap size (master nodes)"
-          description: "Heap size to be allocated for Java (master nodes)"
+          description: "Heap size to be allocated for Java (mater nodes)"
           default: "512m"
-
+        
         - variable: "master_mem_limit"
           type: "int"
           required: true
           label: "Memory limit in byte (master nodes)"
           description: "Memory limit in Byte per elasticsearch container. AT LEAST double the heap size! (master nodes)"
           default: 1073741824
-
+        
         - variable: "data_heap_size"
           type: "string"
           required: true
           label: "Heap size (data nodes)"
-          description: "Heap size to be allocated for Java (data nodes)"
+          description: "Heap size to be allocated for Java (mater nodes)"
           default: "512m"
-
+        
         - variable: "data_mem_limit"
           type: "int"
           required: true
           label: "Memory limit in byte (data nodes)"
           description: "Memory limit in Byte per elasticsearch container. AT LEAST double the heap size! (data nodes)"
           default: 1073741824
-
+        
         - variable: "client_heap_size"
           type: "string"
           required: true
           label: "Heap size (client nodes)"
-          description: "Heap size to be allocated for Java (client nodes)"
+          description: "Heap size to be allocated for Java (mater nodes)"
           default: "512m"
-
+        
         - variable: "client_mem_limit"
           type: "int"
           required: true
@@ -92,7 +79,7 @@ catalog:
           label: "# of initial data nodes"
           description: "Set the initial number of data nodes"
           default: 2
-
+        
         - variable: "initial_client_nodes"
           type: "int"
           required: true
@@ -100,25 +87,12 @@ catalog:
           description: "Set the initial number of client nodes"
           default: 1
 
-        - variable: "VOLUME_DRIVER"
-          description: "The VOLUME driver to associate with this server"
-          label: "VOLUME Driver"
-          required: true
-          default: "local"
-          type: enum
-          options:
-            - local
-            - rancher-nfs
-            - rancher-efs
-            - rancher-ebs
 
-services:
+es-master:
+  scale: ${minimum_master_nodes}
 
-  es-master:
-    scale: ${minimum_master_nodes}
+es-data:
+  scale: ${initial_data_nodes}
 
-  es-data:
-    scale: ${initial_data_nodes}
-
-  es-client:
-    scale: ${initial_client_nodes}
+es-client:
+  scale: ${initial_client_nodes}

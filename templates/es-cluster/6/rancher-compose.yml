@@ -1,7 +1,7 @@
 version: '2'
 catalog:
     name: Elasticsearch Cluster
-    version: 6.2.4
+    version: 6.2.3-rancher2
     description: Scalable Elasticsearch Cluster
 
     questions:
@@ -12,27 +12,17 @@ catalog:
           description: "Name of the Elasticsearch Cluster"
           default: "es-cluster"
 
-        - variable: "INCLUDE_CEREBRO"
-          label: "Include Cerebro:"
-          description: |
-            Include Cerebro administration - you will use the address http://elasticsearch:9200 to connect to this cluster.
-          default: true
-          type: boolean
-
         - variable: "UPDATE_SYSCTL"
           label: "Update host sysctl:"
           description: |
             Set true to avoid vm.max_map_count errors.
             WARN: If set true, host param vm.max_map_count will be update to 262144.
           default: false
-          type: boolean
-
-        - variable: "INCLUDE_KIBANA"
-          label: "Include Kibana:"
-          description: |
-            Set true to deploy a linked Kibana instance as well.
-          default: true
-          type: boolean
+          required: true
+          type: enum
+          options:
+            - false
+            - true
 
         - variable: "master_heap_size"
           type: "string"
@@ -109,18 +99,6 @@ catalog:
             - rancher-efs
             - rancher-ebs
 
-        - variable: "thread_pool_search_size"
-          type: "int"
-          required: false
-          label: "thread_pool.search.size (data nodes)"
-          description: "For count/search/suggest operations. Thread pool type is fixed_auto_queue_size with a size of int((# of available_processors * 3) / 2) + 1. (data nodes)"
-
-        - variable: "thread_pool_search_queue_size"
-          type: "int"
-          required: false
-          label: "thread_pool.search.queue_size (data nodes)"
-          description: "Initial queue_size of 1000. (data nodes)"
-
 services:
 
   es-master:
@@ -131,22 +109,3 @@ services:
 
   es-client:
     scale: ${initial_client_nodes}
-  es-loadbalancer:
-    scale: 1
-    start_on_create: true
-    lb_config:
-      certs: []
-      port_rules:
-      - priority: 1
-        protocol: tcp
-        service: es-master
-        source_port: 9201
-        target_port: 9200
-    health_check:
-      response_timeout: 2000
-      healthy_threshold: 2
-      port: 42
-      unhealthy_threshold: 3
-      initializing_timeout: 60000
-      interval: 2000
-      reinitializing_timeout: 60000

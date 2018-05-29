@@ -5,7 +5,7 @@ services:
             io.rancher.scheduler.affinity:container_label_soft_ne: io.rancher.stack_service.name=$${stack_name}/$${service_name}
             io.rancher.container.hostname_override: container_name
             io.rancher.sidekicks: es-master-storage{{- if eq .Values.UPDATE_SYSCTL "true" -}},es-master-sysctl{{- end}}
-        image: behroozam/elastic
+        image: behroozam/elastic:6.2.3
         environment:
             - "cluster.name=${cluster_name}"
             - "node.name=$${HOSTNAME}"
@@ -29,15 +29,25 @@ services:
             - IPC_LOCK
         volumes_from:
             - es-master-storage
-        ports:
-            - "9200:9200" 
+
+    es-master-storage:
+        labels:
+            io.rancher.container.start_once: true
+        network_mode: none
+        image: rawmind/alpine-volume:0.0.2-1
+        environment:
+            - SERVICE_UID=1000
+            - SERVICE_GID=1000
+            - SERVICE_VOLUME=/usr/share/elasticsearch/data
+        volumes:
+            - es-master-volume:/usr/share/elasticsearch/data
 
     es-data:
         labels:
             io.rancher.scheduler.affinity:container_label_soft_ne: io.rancher.stack_service.name=$${stack_name}/$${service_name}
             io.rancher.container.hostname_override: container_name
             io.rancher.sidekicks: es-data-storage{{- if eq .Values.UPDATE_SYSCTL "true" -}},es-data-sysctl{{- end}}
-        image: behroozam/elastic
+        image: behroozam/elastic:6.2.3
         environment:
             - "cluster.name=${cluster_name}"
             - "node.name=$${HOSTNAME}"
@@ -47,8 +57,6 @@ services:
             - "ES_JAVA_OPTS=-Xms${data_heap_size} -Xmx${data_heap_size}"
             - "node.master=false"
             - "node.data=true"
-            - "thread_pool.search.size=${thread_pool_search_size}"
-            - "thread_pool.search.queue_size=${thread_pool_search_queue_size}"
         ulimits:
             memlock:
                 soft: -1
@@ -65,12 +73,24 @@ services:
         depends_on:
             - es-master
 
+    es-data-storage:
+        labels:
+            io.rancher.container.start_once: true
+        network_mode: none
+        image: rawmind/alpine-volume:0.0.2-1
+        environment:
+            - SERVICE_UID=1000
+            - SERVICE_GID=1000
+            - SERVICE_VOLUME=/usr/share/elasticsearch/data
+        volumes:
+            - es-data-volume:/usr/share/elasticsearch/data
+
     es-client:
         labels:
             io.rancher.scheduler.affinity:container_label_soft_ne: io.rancher.stack_service.name=$${stack_name}/$${service_name}
             io.rancher.container.hostname_override: container_name
             io.rancher.sidekicks: es-client-storage{{- if eq .Values.UPDATE_SYSCTL "true" -}},es-client-sysctl{{- end}}
-        image: behroozam/elastic
+        image: behroozam/elastic:6.2.3
         environment:
             - "cluster.name=${cluster_name}"
             - "node.name=$${HOSTNAME}"
@@ -96,18 +116,6 @@ services:
         depends_on:
             - es-master
 
-    es-master-storage:
-        labels:
-            io.rancher.container.start_once: true
-        network_mode: none
-        image: rawmind/alpine-volume:0.0.2-1
-        environment:
-            - SERVICE_UID=1000
-            - SERVICE_GID=1000
-            - SERVICE_VOLUME=/usr/share/elasticsearch/data
-        volumes:
-            - es-storage-volume:/usr/share/elasticsearch/data
-
     es-client-storage:
         labels:
             io.rancher.container.start_once: true
@@ -118,24 +126,7 @@ services:
             - SERVICE_GID=1000
             - SERVICE_VOLUME=/usr/share/elasticsearch/data
         volumes:
-            - es-storage-volume:/usr/share/elasticsearch/data
-
-    es-data-storage:
-        labels:
-            io.rancher.container.start_once: true
-        network_mode: none
-        image: rawmind/alpine-volume:0.0.2-1
-        environment:
-            - SERVICE_UID=1000
-            - SERVICE_GID=1000
-            - SERVICE_VOLUME=/usr/share/elasticsearch/data
-        volumes:
-            - es-storage-volume:/usr/share/elasticsearch/data
-
-    es-loadbalancer:
-        image: rancher/lb-service-haproxy:v0.9.1
-        ports:
-            - "9201:9200"
+            - es-client-volume:/usr/share/elasticsearch/data
 
     {{- if eq .Values.UPDATE_SYSCTL "true" }}
     es-master-sysctl:
@@ -147,8 +138,6 @@ services:
         environment:
             - "SYSCTL_KEY=vm.max_map_count"
             - "SYSCTL_VALUE=262144"
-    {{- end}}
-    {{- if eq .Values.UPDATE_SYSCTL "true" }}
     es-data-sysctl:
         labels:
             io.rancher.container.start_once: true
@@ -158,8 +147,6 @@ services:
         environment:
             - "SYSCTL_KEY=vm.max_map_count"
             - "SYSCTL_VALUE=262144"
-    {{- end}}
-    {{- if eq .Values.UPDATE_SYSCTL "true" }}
     es-client-sysctl:
         labels:
             io.rancher.container.start_once: true
@@ -170,27 +157,14 @@ services:
             - "SYSCTL_KEY=vm.max_map_count"
             - "SYSCTL_VALUE=262144"
     {{- end}}
-    
-    {{- if eq .Values.INCLUDE_KIBANA "true" }}
-    es-kibana:
-        image: behroozam/kibana
-        environment:
-            - "ELASTICSEARCH_URL=http://es-client:9200"
-            - "xpack.security.enabled=false"
-        external_links:
-            - es-client:es-client
-        ports: 
-            - "5601:5601"
-    {{- end}}
-    
-    {{- if eq .Values.INCLUDE_CEREBRO "true" }}
-    es-cerebro:
-        image: yannart/cerebro:0.7.2
-        external_links:
-            - es-client:elasticsearch
-    {{- end}}
 
 volumes:
-  es-storage-volume:
+  es-master-volume:
+    driver: ${VOLUME_DRIVER}
+    per_container: true
+  es-data-volume:
+    driver: ${VOLUME_DRIVER}
+    per_container: true
+  es-client-volume:
     driver: ${VOLUME_DRIVER}
     per_container: true

@@ -1,8 +1,9 @@
 version: '2'
 catalog:
     name: Elasticsearch Cluster
-    version: 5.6.5
+    version: 5.5.1-rancher1
     description: Scalable Elasticsearch Cluster
+    maximum_rancher_version: v1.6.14
 
     questions:
         - variable: "cluster_name"
@@ -12,27 +13,17 @@ catalog:
           description: "Name of the Elasticsearch Cluster"
           default: "es-cluster"
 
-        - variable: "INCLUDE_CEREBRO"
-          label: "Include Cerebro:"
-          description: |
-            Include Cerebro administration - you will use the address http://elasticsearch:9200 to connect to this cluster.
-          default: true
-          type: boolean
-
         - variable: "UPDATE_SYSCTL"
           label: "Update host sysctl:"
           description: |
             Set true to avoid vm.max_map_count errors.
             WARN: If set true, host param vm.max_map_count will be update to 262144.
           default: false
-          type: boolean
-
-        - variable: "INCLUDE_KIBANA"
-          label: "Include Kibana:"
-          description: |
-            Set true to deploy a linked Kibana instance as well.
-          default: true
-          type: boolean
+          required: true
+          type: enum
+          options:
+            - false
+            - true
 
         - variable: "master_heap_size"
           type: "string"
