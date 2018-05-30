@@ -6,6 +6,10 @@ services:
             io.rancher.container.hostname_override: container_name
             io.rancher.sidekicks: es-master-storage{{- if eq .Values.UPDATE_SYSCTL "true" -}},es-master-sysctl{{- end}}
         image: behroozam/elastic:6.2.3
+        command:
+        - sh
+        - -c
+        - 'chmod -R a+rwx /usr/share/elasticsearch/data'
         environment:
             - "cluster.name=${cluster_name}"
             - "node.name=$${HOSTNAME}"
@@ -48,6 +52,10 @@ services:
             io.rancher.container.hostname_override: container_name
             io.rancher.sidekicks: es-data-storage{{- if eq .Values.UPDATE_SYSCTL "true" -}},es-data-sysctl{{- end}}
         image: behroozam/elastic:6.2.3
+        command:
+        - sh
+        - -c
+        - 'chmod -R a+rwx /usr/share/elasticsearch/data'
         environment:
             - "cluster.name=${cluster_name}"
             - "node.name=$${HOSTNAME}"
@@ -78,6 +86,10 @@ services:
             io.rancher.container.start_once: true
         network_mode: none
         image: registry.arna.ir:5000/alpine-volume/alpine-volume:0.0.2-2
+        command:
+        - sh
+        - -c
+        - 'chmod -R a+rwx /usr/share/elasticsearch/data'
         environment:
             - SERVICE_UID=1000
             - SERVICE_GID=1000
@@ -91,6 +103,10 @@ services:
             io.rancher.container.hostname_override: container_name
             io.rancher.sidekicks: es-client-storage{{- if eq .Values.UPDATE_SYSCTL "true" -}},es-client-sysctl{{- end}}
         image: behroozam/elastic:6.2.3
+        command:
+        - sh
+        - -c
+        - 'chmod -R a+rwx /usr/share/elasticsearch/data'
         environment:
             - "cluster.name=${cluster_name}"
             - "node.name=$${HOSTNAME}"
