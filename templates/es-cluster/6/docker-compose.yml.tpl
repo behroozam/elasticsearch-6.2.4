@@ -4,7 +4,6 @@ services:
         labels:
             io.rancher.scheduler.affinity:container_label_soft_ne: io.rancher.stack_service.name=$${stack_name}/$${service_name}
             io.rancher.container.hostname_override: container_name
-            io.rancher.sidekicks: es-master-storage{{- if eq .Values.UPDATE_SYSCTL "true" -}},es-master-sysctl{{- end}}
         image: behroozam/elastic:6.2.3
         command:
         - sh
@@ -38,7 +37,6 @@ services:
         labels:
             io.rancher.scheduler.affinity:container_label_soft_ne: io.rancher.stack_service.name=$${stack_name}/$${service_name}
             io.rancher.container.hostname_override: container_name
-            io.rancher.sidekicks: es-data-storage{{- if eq .Values.UPDATE_SYSCTL "true" -}},es-data-sysctl{{- end}}
         image: behroozam/elastic:6.2.3
         command:
         - sh
@@ -72,7 +70,6 @@ services:
         labels:
             io.rancher.scheduler.affinity:container_label_soft_ne: io.rancher.stack_service.name=$${stack_name}/$${service_name}
             io.rancher.container.hostname_override: container_name
-            io.rancher.sidekicks: es-client-storage{{- if eq .Values.UPDATE_SYSCTL "true" -}},es-client-sysctl{{- end}}
         image: behroozam/elastic:6.2.3
         command:
         - sh
