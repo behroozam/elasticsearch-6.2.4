@@ -33,9 +33,7 @@ services:
             - IPC_LOCK
         volumes:
             - es-master-volume:/usr/share/elasticsearch/data
-        volumes:
-            es-master-volume:
-                driver: local
+        volume_driver: local
     es-data:
         labels:
             io.rancher.scheduler.affinity:container_label_soft_ne: io.rancher.stack_service.name=$${stack_name}/$${service_name}
@@ -68,11 +66,7 @@ services:
             - IPC_LOCK
         volumes:
             - es-data-volume:/usr/share/elasticsearch/data
-        volumes:
-            es-data-volumee:
-                driver: local
-        depends_on:
-            - es-master
+        volume_driver: local
 
     es-client:
         labels:
@@ -106,11 +100,7 @@ services:
             - IPC_LOCK
         volumes:
             - es-client-volume:/usr/share/elasticsearch/data
-        volumes:
-            es-client-volume:
-                driver: local
-        depends_on:
-            - es-master
+        volume_driver: local
 
 
     {{- if eq .Values.UPDATE_SYSCTL "true" }}
@@ -142,4 +132,3 @@ services:
             - "SYSCTL_KEY=vm.max_map_count"
             - "SYSCTL_VALUE=262144"
     {{- end}}
-    
