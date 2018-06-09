@@ -87,18 +87,6 @@ catalog:
           description: "Set the initial number of client nodes"
           default: 1
 
-        - variable: "VOLUME_DRIVER"
-          description: "The VOLUME driver to associate with this server"
-          label: "VOLUME Driver"
-          required: true
-          default: "local"
-          type: enum
-          options:
-            - local
-            - rancher-nfs
-            - rancher-efs
-            - rancher-ebs
-
 services:
 
   es-master:

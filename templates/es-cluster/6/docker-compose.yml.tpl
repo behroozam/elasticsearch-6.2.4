@@ -31,21 +31,11 @@ services:
         mem_swappiness: 0
         cap_add:
             - IPC_LOCK
-        volumes_from:
-            - es-master-storage
-
-    es-master-storage:
-        labels:
-            io.rancher.container.start_once: true
-        network_mode: none
-        image: registry.arna.ir:5000/alpine-volume/alpine-volume:0.0.2-2
-        environment:
-            - SERVICE_UID=1000
-            - SERVICE_GID=1000
-            - SERVICE_VOLUME=/usr/share/elasticsearch/data
         volumes:
             - es-master-volume:/usr/share/elasticsearch/data
-
+        volumes:
+            es-master-volume:
+                driver: local
     es-data:
         labels:
             io.rancher.scheduler.affinity:container_label_soft_ne: io.rancher.stack_service.name=$${stack_name}/$${service_name}
@@ -76,26 +66,13 @@ services:
         mem_swappiness: 0
         cap_add:
             - IPC_LOCK
-        volumes_from:
-            - es-data-storage
-        depends_on:
-            - es-master
-
-    es-data-storage:
-        labels:
-            io.rancher.container.start_once: true
-        network_mode: none
-        image: registry.arna.ir:5000/alpine-volume/alpine-volume:0.0.2-2
-        command:
-        - sh
-        - -c
-        - 'chmod -R a+rwx /usr/share/elasticsearch/data'
-        environment:
-            - SERVICE_UID=1000
-            - SERVICE_GID=1000
-            - SERVICE_VOLUME=/usr/share/elasticsearch/data
         volumes:
             - es-data-volume:/usr/share/elasticsearch/data
+        volumes:
+            es-data-volumee:
+                driver: local
+        depends_on:
+            - es-master
 
     es-client:
         labels:
@@ -127,22 +104,14 @@ services:
         mem_swappiness: 0
         cap_add:
             - IPC_LOCK
-        volumes_from:
-            - es-client-storage
+        volumes:
+            - es-client-volume:/usr/share/elasticsearch/data
+        volumes:
+            es-client-volume:
+                driver: local
         depends_on:
             - es-master
 
-    es-client-storage:
-        labels:
-            io.rancher.container.start_once: true
-        network_mode: none
-        image: registry.arna.ir:5000/alpine-volume/alpine-volume:0.0.2-2
-        environment:
-            - SERVICE_UID=1000
-            - SERVICE_GID=1000
-            - SERVICE_VOLUME=/usr/share/elasticsearch/data
-        volumes:
-            - es-client-volume:/usr/share/elasticsearch/data
 
     {{- if eq .Values.UPDATE_SYSCTL "true" }}
     es-master-sysctl:
@@ -173,14 +142,4 @@ services:
             - "SYSCTL_KEY=vm.max_map_count"
             - "SYSCTL_VALUE=262144"
     {{- end}}
-
-volumes:
-  es-master-volume:
-    driver: ${VOLUME_DRIVER}
-    per_container: true
-  es-data-volume:
-    driver: ${VOLUME_DRIVER}
-    per_container: true
-  es-client-volume:
-    driver: ${VOLUME_DRIVER}
-    per_container: true
+    
